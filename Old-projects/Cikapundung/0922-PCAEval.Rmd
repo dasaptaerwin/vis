@@ -1,0 +1,308 @@
+---
+title: "PCA test (version 2)"
+author: "Dasapta Erwin Irawan"
+date: "22/09/2014"
+output: word_document
+---
+
+*Note from 09/19 discussion:*
+
++ This version throws out the "Q" variable.
++ Use `Random Forest` package as comparison.
+
+The PCA test was done using the `pcaMethods` package written by Stacklies et.al (2007). This package can automatically impute the missing values in the dataset. 
+
+The `pcaMethods` package provides several pca methods:
+
++ `svd`: Singular value decomposition or classical pca similar to `prcomp()` or `princomp()`, for linear dataset 
++ `svdimpute`: svd with imputation (filling missing data)
++ `nipals`: pca with iterative partial least squares method, for non-linear dataset 
++ `bpca`: pca using Bayesian model to handle NAs
++ `ppca`: pca using probabilistic model to handle NAs
+
+We applied the pca on the dataset, which have been divided in to three groups:
+
++ Group 1: Physical parameters
++ Group 2: Cations
++ Group 3: Anions
+
+For each group we used the following work flow:
+
++ Run PCA using `svdImpute`.
++ Retaining eigenvalues via function `sDev()` and plotting.
++ Printing pca summary.
++ Printing and plotting variable loadings to PCs.
++ Printing and plotting cases scores to PCs.
+
+# 0. Loading libraries and preparing dataset 
+
++ Installing `pcaMethods` package
+
+```
+source("http://bioconductor.org/biocLite.R")
+biocLite("pcaMethods")
+```
+
++ Loading libraries
+
+```{r}
+require("pcaMethods") # PCA
+require("pander") # output table formatting
+require("dplyr") # table manipulation
+```
+
++ Loading and grouping dataset (excluding Q)
+
+```{r groupingdataset}
+data <- as.data.frame(read.csv("0806alldata.csv", header = TRUE))
+
+attach(data)
+
+group1 <- data[,c("x", "y", "type", 
+                  "ec", "elv", 
+                  "ph", "hard", 
+                  "tds", "temp",
+                  "eh", "cumrain", 
+                  "lag1")]
+
+group2 <- data[,c("x", "y", "type", 
+                  "ec", "elv",
+                  "aq", "Ca", "Mg", 
+                  "Fe", "Mn", "K", 
+                  "Na", "cumrain", 
+                  "lag1")]
+
+group3 <- data[,c("x", "y", "type", 
+                  "ec", "elv",
+                  "aq", "CO3", 
+                  "HCO3", 
+                  "CO2", "Cl", 
+                  "SO4", "NO2", 
+                  "NO3", "SiO2",  
+                  "cumrain", 
+                  "lag1")]
+```
+
+# 1. Run the PCA on Group1 
+
++ Run PCA using `svdImpute` 
+
+```{r pcagroup1}
+pcaSvd1 <- pca(group1, 
+            method = "svdImpute", 
+            scale = "uv",
+            center = T,
+            nPcs = 5,
+            evalPcs = 1:5)
+```
+
+According to the table, the first two PCs explain 87.5% of the variance. Major loadings on PC 1 are: y coordinate (0.1), Redox potential/eh (-0.97), and Hardness/hard (-0.14), while the ones on PC 2 are: TDS (0.49), elevation (-0.47), EC (0.45), and Temp (0.4).
+
+Table 1 Summary and loadings of Group1
+```{r Table1_SummaryGroup1}
+pander(summary(pcaSvd1))
+pander(loadings(pcaSvd1))
+```
+
+The following plots show the mixed plot of sample number distribution and variable in respect to the PCs. Here we can see that most of the groundwater samples fall along the PC 1, while the river water samples fall diagonally. The river water samples might have been shifted further from PC 1 towards PC 2. The shifting might be related to the high EH values which can induce oxydation processes in the river water. Most of the groundwater samples are located closer to PC1 in vertical orientation, similar to the distribution of most of the variables. 
+
+```{r Fig1_ScreeplotGroup1}
+plot.new()
+par(mfrow=c(1,3))
+plot(sDev(pcaSvd1), type = 'l', 
+     main = "Scree plot Group1", 
+     xlab = "Principal Component", 
+     ylab = "Variance", 
+     lwd = 3)
+
+plot(loadings(pcaSvd1), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Svd on Group1")
+text(loadings(pcaSvd1), 
+     row.names(loadings(pcaSvd1)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+
+plot(scores(pcaSvd1), 
+     pch = c(group1$type), 
+     col = c(group1$type),
+     main = "Case scores",
+     sub = "Svd on Group1")
+legend("topleft", 
+        c("Groundwater", "River Water"),
+        title = "Water type:",
+        pch = c(1, 2), 
+        col = c("black", "red"))
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+```
+
+```{r Fig1_BiplotGroup1}
+plot.new()
+par(mfrow=c(1,1))
+biplot(pcaSvd1, 
+       main = "PCA SVD on Group 1")
+legend("bottomright", c("black text -> sample no.", "red text - >variables"))
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+```
+Figure 1 Plots of Group1: Scree, loadings, scores, and biplot
+
+
+# 2. Run the PCA on Group2 
+
+```{r pcaGroup2}
+pcaSvd2 <- pca(group2, 
+               method = "svdImpute", 
+               scale = "uv",
+               center = T,
+               nPcs = 5,
+               evalPcs = 1:5)
+```
+
+In the following table, we can see the summary, loadings, and scores table for Group 2 PCA. The first two PCs  explains only 42% of the total variance. The major loadings for PC1 are: Ca (0.42), Mg (0.42), and Na (0.41), while for PC2 are: x coordinate (0.44), y coordinate (-0.41), Mn (-0.58).  
+
+Table 2 Summary and loadings of Group2
+```{r summaryGroup2}
+pander(summary(pcaSvd2))
+pander(loadings(pcaSvd2))
+```
+
+The following figures show the scree plot, loading, and scores plot of Group 2 PCA. Based on the first two PCs, we can see that most of the variables are distributed in the top-right quadrant. The rain-related variables, the cummulative rain and lag-1 rain, are located in the bottom-left quadrant. The spatial variables, x coordinate and elevation are located in the topleft quadrant. The y coordinate, however, is located in the same bottom-right quadrant as Manganese.
+
+The groundwater samples are scattered in the top-right, bottom-righ and bottom-left corners of the plot. The river water samples are clustered in the top-left corner. 
+
+```{r Fig2_PlotsGroup2}
+plot.new()
+par(mfrow=c(1,3))
+plot(sDev(pcaSvd2), type = 'l', 
+     main = "Scree plot Group2", 
+     xlab = "Principal Component", 
+     ylab = "Variance", 
+     lwd = 3)
+
+plot(loadings(pcaSvd2), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Svd on Group2")
+text(loadings(pcaSvd2), 
+     row.names(loadings(pcaSvd2)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+
+plot(scores(pcaSvd2), 
+     pch = c(group2$type), 
+     col = c(group2$type),
+     main = "Case scores",
+     sub = "Svd on Group1")
+legend("topright", 
+        c("Groundwater", "River Water"),
+        title = "Water type:",
+        pch = c(1, 2), 
+        col = c("black", "red"))
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+```
+
+```{r Fig2_biplotGroup2}
+plot.new()
+par(mfrow=c(1,1))
+biplot(pcaSvd2, 
+       main = "PCA SVD on Group 2")
+legend("bottomright", c("black text -> sample no.", "red text - >variables"))
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+```
+Figure 2 Plots of Group2: Scree, loadings,scores, and biplot of Group2
+
+
+# 3. Run the PCA on Group3 
+
+```{r pcaGroup3}
+pcaSvd3 <- pca(group3, 
+               method = "svdImpute", 
+               scale = "uv",
+               center = T,
+               nPcs = 5,
+               evalPcs = 1:5)
+```
+
+In the following table, we can see the summary, loadings, and scores table for Group 2 PCA. The first two PCs  explains only 33% of the total variance. The major loadings for PC1 are: Cl (0.49), HCO3 (0.43), EC (0.38), and elevation (-0.36), while for PC2 are: NO2 (0.58), NO3 (0.41), CO3 (-0.41), and y coordinate (0.39).
+
+Table 3 Summary and loadings of Group3
+```{r summaryGroup3}
+pander(summary(pcaSvd3))
+pander(loadings(pcaSvd3))
+```
+
+The following figures show the scree plot, loading, and scores plot of Group 2 PCA. Based on the first two PCs, we can see that most of the variables are distributed in the top-right quadrant. The HCO3, SiO2, SO4, and Cl are located in this quadrant, as well as EC.
+
+The rain-related variables, the cummulative rain and lag-1 rain, are located in the bottom-left quadrant along with CO3, while the CO2 is shifted to bottom-right quadrant. 
+
+Both of NO2 and NO3 are located in the top-left quadrant. The spatial variables, x coordinate and elevation are located in the topleft quadrant. The spatial variables, x-y and elevation, are all located in the different quadrant. 
+
+Similar to Group 2, the groundwater samples of Group 3 are distributed in the top-right, bottom-right, and bottom-left corners, with high concentration in the centre of the plot. The river water are also located in the top-left corner in vertical orientation. 
+
+```{r Fig3_PlotsGroup3}
+plot.new()
+par(mfrow=c(1,3))
+plot(sDev(pcaSvd3), type = 'l', 
+     main = "Scree plot Group1", 
+     xlab = "Principal Component", 
+     ylab = "Variance", 
+     lwd = 3)
+
+plot(loadings(pcaSvd3), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Svd on Group3")
+text(loadings(pcaSvd3), 
+     row.names(loadings(pcaSvd3)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+
+plot(scores(pcaSvd3), 
+     pch = c(group3$type), 
+     col = c(group3$type),
+     main = "Case scores",
+     sub = "Svd on Group3")
+legend("topright", 
+        c("Groundwater", "River Water"),
+        title = "Water type:",
+        pch = c(1, 2), 
+        col = c("black", "red"))
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+```
+
+```{r Fig3_biplotGroup3}
+plot.new()
+par(mfrow=c(1,1))
+biplot(pcaSvd2, 
+       main = "PCA SVD on Group 3")
+legend("bottomright", c("black text -> sample no.", "red text - >variables"))
+abline(h = 0, v = 0, col = "blue", lwd = 3)
+```
+Figure 3 Plots of Group3: Scree, loadings,scores, and biplot of Group3
+
+# 4. Preliminary results
+
+We can see the differentiation of groundwater samples from river water samples in terms of physical properties, cations and anions concentration. 
+
+The role of spatial variables (x-y and elevation) to PC1 and PC2, is not equal as shown by the loading values. The NO2 and NO3 concentrations as contaminant signature are mostly correlated with river water, while groundwater has more control from surficial process (CO2, CO3, HCO3), and from the geology (Fe, Mg, SiO2). The Cl and SO4 variables imprinted in the groundwater are the indications seepage from deeper aquifer.   
+
+
+# References
+
++ [Introduction to pcaMethods package - Documentation](http://www.bioconductor.org/packages/release/bioc/vignettes/pcaMethods/inst/doc/pcaMethods.pdf)
++ [Introduction to pcaMethods package - R script](http://www.bioconductor.org/packages/release/bioc/vignettes/pcaMethods/inst/doc/pcaMethods.R)
+
++ R packages
+
+```{r}
+citation("base")
+citation("knitr")
+citation("pcaMethods")
+```

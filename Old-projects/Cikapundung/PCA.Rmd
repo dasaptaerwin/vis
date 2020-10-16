@@ -1,0 +1,426 @@
+---
+title: "PCA test"
+author: "Dasapta Erwin Irawan"
+date: "18/09/2014"
+output: 
+  word_document:
+  toc: TRUE
+---
+
+The PCA test was done using the `pcaMethods` package written by Stacklies et.al (2007). This package can automatically impute the missing values in the dataset. Previous attempts to use `prcomp()` and `princomp()` gained error messages as there are several NAs in the dataset. Arguments of:
+
++ `na.rm = T`
++ `as.numeric()`
++ `as.factor()`
+
+were used, but unsuccesful.
+
+The `pcaMethods` package has several pca methods:
+
++ `svd`: classical pca similar to `prcomp()` or `princomp()`, for linear dataset 
++ `svdimpute`: similar to svd but with imputation
++ `nipals`: pca with iterative method and imputation, for non-linear dataset 
++ `bpca`: pca using Bayesian model to handle NAs
++ `ppca`: pca using probabilistic model to handle NAs
+
+We applied the pca on the dataset, which have been divided in to three groups:
+
++ Group 1: Physical parameters
++ Group 2: Cations
++ Group 3: Anions
+
+For each group we used the following work flow:
+
++ Run PCA using `svdImpute` and `Nipals` as comparison.
++ Retaining eigenvalues via function `sDev()` and plotting.
++ Printing pca summary.
++ Printing and plotting variable loadings to PCs.
++ Printing and plotting cases scores to PCs.
+
+# 0. Loading libraries and preparing dataset 
+
++ Installing `pcaMethods` package
+
+```
+source("http://bioconductor.org/biocLite.R")
+biocLite("pcaMethods")
+```
+
++ Loading libraries
+
+```{r}
+require("pcaMethods")
+```
+
++ Loading and grouping dataset 
+
+```{r}
+data <- as.data.frame(read.csv("0806alldata.csv",
+                      header = TRUE))
+attach(data)
+
+group1 <- data[,c("x", "y", "type", "ec", "elv",  
+                  "ph", "hard", "tds", "temp",
+                  "eh", "Q", "cumrain", "lag1")]
+
+group2 <- data[,c("x", "y", "type", "ec", "elv", "aq", 
+                  "Ca", "Mg", 
+                  "Fe", "Mn",  
+                  "K", "Na",  
+                  "cumrain", "lag1")]
+
+group3 <- data[,c("x", "y", "type", "ec", "elv", "aq", 
+                  "CO3", "HCO3", 
+                  "CO2", "Cl", 
+                  "SO4", "NO2", 
+                  "NO3", "SiO2",  
+                  "cumrain", "lag1")]
+```
+
+# 1. Run the PCA on Group1 
+
++ Run PCA using svdImpute and Nipals.
+
+```{r}
+pcaSvd1 <- pca(group1, 
+            method = "svdImpute", 
+            scale = "uv",
+            center = T,
+            nPcs = 5,
+            evalPcs = 1:5)
+
+pcaNipals1 <- pca(group1, 
+                method = "nipals", 
+                scale = "uv",
+                center = T,
+                nPcs = 5,
+                evalPcs = 1:5)
+```
+
++ Retaining eigenvalues via function `sDev()` and plotting.
+
+```{r}
+sDevs1 <- cbind(sDev(pcaSvd1), sDev(pcaNipals1))
+matplot(sDevs1, type = 'l', 
+        xlab="Eigenvalues", ylab="Standard deviation of PC", 
+        lwd = 3)
+legend(x="topright", legend=c("SVD Impute", "Nipals"), 
+       lty=1:2, 
+       col=1:2, 
+       lwd=3)
+```
+
++ Printing pca summary.
+
+```{r}
+summary(pcaSvd1)
+summary(pcaNipals1)
+summaries1 <- cbind(summary(pcaSvd1), summary(pcaNipals1))
+```
+
++ Printing and plotting variable loadings to PCs
+
+```{r}
+loadings(pcaSvd1)
+loadings(pcaNipals1)
+
+par(mfrow=c(1, 2))
+plot(loadings(pcaSvd1), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Svd on Group1")
+text(loadings(pcaSvd1), 
+     row.names(loadings(pcaSvd1)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+plot(loadings(pcaNipals1), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Nipals on Group1")
+text(loadings(pcaNipals1), row.names(loadings(pcaNipals1)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+```
+
++ Printing and plotting cases scores to PCs
+
+```{r, eval=FALSE}
+scores(pcaSvd1)
+scores(pcaNipals1)
+```
+
+```{r}
+par(mfrow=c(1, 1))
+plot(scores(pcaSvd1), 
+     pch = c(group1$type), 
+     col = c(group1$type),
+     main = "Case scores",
+     sub = "Svd on Group1")
+legend(x = "topleft", 
+        c("Groundwater", "River Water"),
+        title = "Water type:",
+        pch = c(1, 2), 
+        col = c("black", "red"))
+
+plot(scores(pcaNipals1), 
+     pch = c(group1$type), 
+     col = c(group1$type),
+     main = "Case scores",
+     sub = "Nipals on Group1")
+legend(x = "bottomright", 
+       c("Groundwater", "River Water"),
+       title = "Water type:",
+       pch = c(1, 2), 
+       col = c("black", "red"))
+```
+
+# 2. Run the PCA on Group2 
+
++ Run PCA using svdImpute and Nipals.
+
+```{r}
+pcaSvd2 <- pca(group2, 
+               method = "svdImpute", 
+               scale = "uv",
+               center = T,
+               nPcs = 5,
+               evalPcs = 1:5)
+
+pcaNipals2 <- pca(group2, 
+                  method = "nipals", 
+                  scale = "uv",
+                  center = T,
+                  nPcs = 5,
+                  evalPcs = 1:5)
+```
+
++ Retaining eigenvalues via function `sDev()` and plotting.
+
+```{r}
+sDevs2 <- cbind(sDev(pcaSvd2), 
+                sDev(pcaNipals2))
+
+matplot(sDevs2, type = 'l', 
+        xlab="Eigenvalues", ylab="Standard deviation of PC", 
+        lwd = 3)
+legend(x="topright", legend=c("SVD Impute", "Nipals"), 
+       lty=1:2, 
+       col=1:2, 
+       lwd=3)
+```
+
++ Printing pca summary.
+
+```{r}
+summary(pcaSvd2)
+summary(pcaNipals2)
+```
+
++ Printing and plotting variable loadings to PCs.
+
+```{r}
+loadings(pcaSvd2, pcaNipals2)
+
+par(mfrow=c(1, 2))
+plot(loadings(pcaSvd2), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Svd on Group2")
+text(loadings(pcaSvd2), 
+     row.names(loadings(pcaSvd2)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+plot(loadings(pcaNipals2), 
+     pch = 20,
+     main = "Variable loadings", 
+     sub = "Nipals on Group2")
+text(loadings(pcaNipals2), 
+     row.names(loadings(pcaNipals2)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+```
+
++ Printing and plotting cases scores to PCs.
+
+```{r, eval=FALSE}
+scores(pcaSvd2)
+scores(pcaNipals2)
+
+plot.new()
+par(mfrow=c(1, 1))
+plot(scores(pcaSvd2), 
+     pch = c(group2$type), 
+     col = c(group2$type),
+     main = "Case scores",
+     sub = "Svd on Group2")
+legend(x = "bottomright", 
+       c("Groundwater", "River Water"),
+       title = "Water type:",
+       pch = c(1, 2), 
+       col = c("black", "red"))
+
+plot(scores(pcaNipals2), 
+     pch = c(group2$type), 
+     col = c(group2$type),
+     main = "Case scores",
+     sub = "Nipals on Group2")
+legend(x = "bottomleft", 
+       c("Groundwater", "River Water"),
+       title = "Water type:",
+       pch = c(1, 2), 
+       col = c("black", "red"))
+```
+
+# 3. Run the PCA on Group3 
+
++ Run PCA using svdImpute and Nipals.
+
+```{r}
+pcaSvd3 <- pca(group3, 
+               method = "svdImpute", 
+               scale = "uv",
+               center = T,
+               nPcs = 5,
+               evalPcs = 1:5)
+
+pcaNipals3 <- pca(group3, 
+                  method = "nipals", 
+                  scale = "uv",
+                  center = T,
+                  nPcs = 5,
+                  evalPcs = 1:5)
+```
+
++ Retaining eigenvalues via function `sDev()` and plotting.
+
+```{r}
+sDevs3 <- cbind(sDev(pcaSvd3), 
+                sDev(pcaNipals3))
+
+plot.new()
+matplot(sDevs3, type = 'l', 
+        xlab="Eigenvalues", ylab="Standard deviation of PC", 
+        lwd = 3)
+legend(x="topright", 
+       legend=c("SVD Impute", "Nipals"), 
+       lty=1:2, 
+       col=1:2, 
+       lwd=3)
+```
+
++ Printing pca summary.
+
+```{r}
+summary(pcaSvd3)
+summary(pcaNipals3)
+```
+
++ Printing and plotting variable loadings to PCs.
+
+```{r}
+loadings(pcaSvd3)
+loadings(pcaNipals3)
+
+par(mfrow=c(1, 2))
+plot(loadings(pcaSvd3), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Svd on Group3")
+text(loadings(pcaSvd3), 
+     row.names(loadings(pcaSvd3)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+plot(loadings(pcaNipals3), 
+     pch = 20,
+     main = "Variable loadings",
+     sub = "Nipals on Group3")
+text(loadings(pcaNipals3), 
+     row.names(loadings(pcaNipals3)),
+     cex=0.6, 
+     pos=1, 
+     col="red")
+```
+
++ Printing and plotting cases scores to PCs.
+
+```{r, eval=FALSE}
+scores(pcaSvd3)
+scores(pcaNipals3)
+
+plot.new()
+par(mfrow=c(1,1))
+plot(scores(pcaSvd3), 
+     pch = c(group3$type), 
+     col = c(group3$type),
+     main = "Case scores",
+     sub = "SVD on Group3")
+legend(x = "topleft", 
+       c("Groundwater", "River Water"),
+       title = "Water type:",
+       pch = c(1, 2), 
+       col = c("black", "red"))
+
+plot(scores(pcaNipals3), 
+     pch = c(group3$type), 
+     col = c(group3$type),
+     main = "Case scores",
+     sub = "Nipals on Group3")
+legend(x = "topleft", 
+       c("Groundwater", "River Water"),
+       title = "Water type:",
+       pch = c(1, 2), 
+       col = c("black", "red"))
+```
+
+# 4. Preliminary results
+
+## 4.1 Group 1
+
++ The eigenvalues suggests two PCs to be retained, from svdImpute method. Both PCs explaine 89.6% of total variance. We drop the Nipals method, based on the poor PC result.
+
++ The loading plot from svd shows good separation of the variables. All variables, except Q is aligned in vertical (PC1) direction, while the Nipals loading plot shows no pattern. 
+
++ The case score plot from svd shows good separation of groundwater data (black) from the river data (red). The groundwater data is aligned in vertical axis, while the river is in diagonal pattern. 
+
+
+## 4.2 Group 2
+
++ The eigenvalues suggests three PCs to be retained, from svdImpute method. All PCs explain 51.9% of total variance. Here's we see that the Nipals method shows similar result.
+
++ The loading plot from both methods shows similar distribution of variables in respect to PC1 and PC2. Nipals plot show a vertical flipped distribution from the svd plot. 
+    + The spatial variables (x, y, elv) are not closely distributed. 
+    + The rain variables (cumrain and lag1) fall in one group. 
+    + We also see the EC has stronger interaction with Ca, Na, Mg, K, and Mn, while Fe is separated from the group. 
+
++ The case score plot from both method show similar distribution. The Nipals plot is a vertical flipped of the svd plot. The plots show a clear separation of groundwater data (black) and river data (red). 
+
+
+## 4.3 Group 3
+
++ The eigenvalues from both methods suggest three PCs to be retained. Both methods show 42.7% of total variance explained by the PCs. 
+
++ The loading plot from both methods shows similar distribution of variables in respect to PC1 and PC2. Nipals plot show a vertical flipped distribution from the svd plot. 
+    + The spatial variables (x, y, elv) again are not closely distributed. 
+    + The rain variables (cumrain and lag1) dan CO2 fall in one group. 
+    + We also see the EC has stronger interaction with the HCO3, CO3, CL, SO4, and SiO2, while NO2 and NO3 is separated from the group. 
+    
++ The case score plot from svd shows good separation of groundwater data (black) from the river data (red). The river data is aligned in vertical axis, while the river is in scaterred diagonal pattern. 
+
+
+# References
+
++ [Introduction to pcaMethods package - Documentation](http://www.bioconductor.org/packages/release/bioc/vignettes/pcaMethods/inst/doc/pcaMethods.pdf)
++ [Introduction to pcaMethods package - R script](http://www.bioconductor.org/packages/release/bioc/vignettes/pcaMethods/inst/doc/pcaMethods.R)
+
++ R packages
+
+```{r}
+citation("base")
+citation("knitr")
+citation("pcaMethods")
+```

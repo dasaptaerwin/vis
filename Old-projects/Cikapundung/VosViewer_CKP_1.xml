@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VosViewer
+workflow
+29 June 2017>
+<Create a map
+based on
+bibliographic
+data>
+<Open *.RIS
+biblio data>
+<Type of analysis:
+Co-authorship />
+<Counting method:
+Full counting />
+<Normalization:
+Assoc strength />
+<Layout:
+use default />
+<Clustering
+resolution: 1 />
+<Clustering
+min size: 5 />
+<Merge small
+clusters: ON />
+<Min number
+of docs of an
+author: 5>
+<Results:
+2368 authors
+in 41 items />
+<Number of
+authors
+to be
+selected
+(and scored): 41>
+<Only 37 items
+connected:
+show all set>
+<Results:>
+<41 items in
+6 clusters />
+<image:
+vos_wq_d_complete_jabref
+pdf/png />
+</Results:>
+</Only 37 items
+connected:
+show all set>
+</Number of
+authors
+to be
+selected
+(and scored): 41>
+</Min number
+of docs of an
+author: 5>
+</Open *.RIS
+biblio data>
+</Create a map
+based on
+bibliographic
+data>
+<Create a map
+based on
+text data>
+<Open *.RIS
+biblio data>
+<Fields to be
+extracted:
+title and
+abstract />
+<Counting method:
+full counting />
+<Min occurence
+of a term: 10>
+<Results:
+13349 terms,
+only 540 meet
+threshold />
+<Number of
+terms
+to be
+selected
+(and scored):
+324 (60% top scores,
+default)>
+<Results:>
+<324 terms in
+7 clusters />
+<image:
+vos_wq_d_complete_terms
+pdf/png />
+</Results:>
+</Number of
+terms
+to be
+selected
+(and scored):
+324 (60% top scores,
+default)>
+</Min occurence
+of a term: 10>
+</Open *.RIS
+biblio data>
+</Create a map
+based on
+text data>
+</VosViewer
+workflow
+29 June 2017>

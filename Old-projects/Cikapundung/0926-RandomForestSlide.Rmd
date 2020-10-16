@@ -1,0 +1,142 @@
+---
+title: "Random Forest"
+author: "Dasapta Erwin Irawan"
+date: "Friday, September 26, 2014"
+output: ioslides_presentation
+---
+
+# Introduction
+
+- Bagging / bootstrap aggregation: a technique for reducing the variance of an estimated prediction function.
+- Regression tree:
+    + a tree-like graph showing model of decision hierarki based on regression equation. 
+- Prunning: 
+    + trimming a tree, shrub or bush; cut away a branch from a tree.
+    + reduce the number of insignificant variables in a dataset (unwanted branch from a tree).
+    + criteria for prunning: minimum node size, maximum standard deviation of samples at a node.
+    
+
+## Terminologies [2]
+
+- Random Forest:
+    + Ensemble classification of variables/predictors.
+    + Using multiple models for better performance that just using a single tree model.  
+    + Running multiple regression trees then choose the best one.
+
+
+## Workflow
+
+- Prepare the dataset:
+    + Cases or samples set in rows (_n_ variables)
+    + Measured variables set in columns (_m_ columns)
+    + R reads this as a `data.frame`
+    + Choose the training dataset:
+    + Set the training set to make the model then make a prediction.
+    + In this case, for descriptive purpose, we will use the whole dataset as training set.
+
+
+## Workflow [2]
+
+- Prepare the package:
+    + We will use `randomForest` package from CRAN repo using: ```install.packages("randomForest")```
+    + Run the package using: ```require("randomForest")``` or ```library("randomForest")```
+- Load the dataset using:
+- Check for missing values (NAs) using: ```sum(!is.na(dataframe))```
+- Impute missing values using: ```rfImpute()```
+- Run randomForest using: ```randomForest()```
+
+
+# The codes
+
+## Installing and loading libraries 
+
+```
+install.packages("randomForest")
+require("randomForest")
+```
+
+## Loading dataset
+
+- The dataset used in this exercise contains more than 15 water quality variables.
+- We will subset the dataset as `Group1`, containing only 10 predictors (x coord, y coord, elevation, pH, hardness, TDS, temperature, Eh, cummulative rainfall, lag-1 rainfall). Electroconductivity (EC) is used as the response. 
+
+```{r loaddataset}
+data <- as.data.frame(read.csv("0806alldata.csv", header = TRUE))
+attach(data)
+group1 <- data[,c("x", "y", "type", 
+                  "ec", "elv", 
+                  "ph", "hard", 
+                  "tds", "temp",
+                  "eh", "cumrain", 
+                  "lag1")]
+```
+
+
+## Making model using ```randomForest()```
+
+```{r}
+# imputing missing values
+group1Imp <- rfImpute(ec ~ ., data = group1)
+
+# making model
+rfModel1 <- randomForest(ec ~ x + y + elv + 
+                              ph + hard + tds + 
+                              temp + eh + cumrain + 
+                              lag1, data = group1Imp, 
+                              ntree = 500, 
+                              mtry = 2,
+                              importance = TRUE,
+                              do.trace = 100, 
+                              proximity=TRUE) 
+```
+
+Notice that we can type `ec ~ .` or we type the full equation instead `ec ~ x + y + elv + ph + hard + tds + temp + eh + cumrain + lag1`
+
+
+## Making model using ```randomForest()``` [2]
+
+- Options:
+    + `ntree` number of trees grown.
+    + `mtry` number of predictors sampled for spliting at each node
+    + `importance`
+    + ``
+    + `proximity` = `TRUE` 
+
+
+## Evaluating the model
+
+- We can evaluate the results from the model by using the following functions:
+
+```{r evaluatingmodel}
+print(rfModel1)
+plot(rfModel1)
+round(importance(rfModel1), 3)
+varImpPlot(rfModel1)
+```
+
+- ```varImpPlot()``` function shows the significant predictors and less significant ones.
+
+
+
+## References
+
+1. [Breiman, L, 2001, Random Forest](https://www.stat.berkeley.edu/~breiman/randomforest2001.pdf)
+
+2. [Breiman, L, 2014, Random Forest Package Documentation](http://cran.r-project.org/web/packages/randomForest/randomForest.pdf)
+
+3. [Eibe Frank, 2000, Pruning Decision Trees and Lists, PhD thesis, Univ of Waikato NZ](http://www.cs.waikato.ac.nz/~eibe/pubs/thesis.final.pdf)
+
+4. [Hastie T, Tibshirani R, and Friedman J, 2009, The Elements of Statistical Learning, Springer](http://web.stanford.edu/~hastie/local.ftp/Springer/OLD/ESLII_print4.pdf)
+
+5. [Horning N, Introduction to decision trees and 
+random forests, American Museum of Natural History](http://goo.gl/zbHyhu)
+
+6. [Horvath S and Shi T, 2005, Random Forest Clustering Applied to Renal Cell Carcinoma: R software tutorial](http://labs.genetics.ucla.edu/horvath/kidneypaper/RFclusteringTutorialRenalCancer.pdf)
+
+7. [Musa Hawamdah, 2012, Random Forest](http://www.slideshare.net/m80m07/random-forest)
+
+8. [Shalizi C, 2009, Classification and Regression Tree: Tutorial, Course handout, Statistics Dept, Carnegie Mellon University](http://www.stat.cmu.edu/~cshalizi/350/lectures/22/lecture-22.pdf)
+
+9. [Stevenson W, 2013, R Bloggers: A Brief Tour of the Trees and Forests](http://www.r-bloggers.com/a-brief-tour-of-the-trees-and-forests/)
+
+
